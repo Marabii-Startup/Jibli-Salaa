@@ -1,4 +1,5 @@
 import { Language } from "./Language";
+import { ROLE } from "./userRole";
 
 export interface UserInfo {
   createdAt: Date;
@@ -9,4 +10,12 @@ export interface UserInfo {
   isAuthenticatedByGoogle: boolean;
   profilePicture: string;
   _id: string;
+  role: ROLE;
+  contacts: Contact[];
+}
+
+export interface Contact {
+  contactId: string;
+  orderId: string;
+  contactName: string;
 }

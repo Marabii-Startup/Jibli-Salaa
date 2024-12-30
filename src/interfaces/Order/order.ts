@@ -6,21 +6,37 @@ export interface Dimensions {
   heightInCm: number;
 }
 
-export interface BuyerOrderState {
-  value: {
-    buyerId?: string;
-    description: string;
-    images: string[];
-    estimatedValue: number;
-    initialDeliveryFee: number;
-    deliveryInstructions: string;
-    productName: string;
-    dimensions: Dimensions;
-    productURL: string;
-    quantity: number;
-    placedAt: Date | null;
-    preferredPickupPlace: AddressObject;
-    isOrderAccepted: boolean;
-    orderStatus: ORDER_STATUS;
-  };
+export interface CompletedOrder {
+  buyerId: string;
+  description: string;
+  images: string[];
+  estimatedValue: number;
+  initialDeliveryFee: number;
+  actualValue: number;
+  actualDeliveryFee: number;
+  deliveryInstructions: string | null;
+  productName: string;
+  dimensions: Dimensions;
+  productURL: string | null;
+  quantity: number;
+  placedAt: Date | null;
+  preferredPickupPlace: AddressObject;
+  isOrderAccepted: boolean;
+  orderStatus: ORDER_STATUS;
+  _id: string | null;
 }
+
+export type InitialOrder = Omit<
+  CompletedOrder,
+  | "buyerId"
+  | "placedAt"
+  | "isOrderAccepted"
+  | "orderStatus"
+  | "images"
+  | "actualValue"
+  | "actualDeliveryFee"
+  | "isOrderAccepted"
+  | "_id"
+> & {
+  selectedFiles: File[];
+};
