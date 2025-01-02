@@ -5,7 +5,6 @@ import CustomTransition from "@/components/Transition";
 
 export default function FormErrorHandler() {
   const errorMessages = useErrors();
-  console.log("errorMessages: ", errorMessages);
   return (
     <>
       {/* Error Alert with Transition */}

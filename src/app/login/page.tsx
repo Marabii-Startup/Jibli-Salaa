@@ -1,20 +1,15 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { handleLoginAction } from "./Utilis/handleLoginAction";
+import { handleLoginAction, LoginFormInputs } from "./Utilis/handleLoginAction";
 import Input from "@/components/Input";
 import FormWrapper from "@/components/Form/FormWrapper";
-import useErrors from "@/components/Form/useErrors";
-import SubmitButton from "@/components/SubmitButton";
-import usePending from "@/components/Form/usePending";
+import FormErrorHandler from "./FormErrorHandler";
+import FormSubmissionButton from "./FormSubmissionButton";
 
 export default function Login() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
-  const errorMessages = useErrors();
-  const pending = usePending();
-  console.log(pending);
-
   return (
     <div className="mt-20 pb-36">
       <div className="text-center flex w-full flex-col items-center pt-20">
@@ -22,7 +17,7 @@ export default function Login() {
         <p className="py-5 text-lg text-gray-400">
           Please fill your email and password to login
         </p>
-        <FormWrapper
+        <FormWrapper<LoginFormInputs>
           action={handleLoginAction}
           redirectTo={redirectTo}
           className="w-full max-w-[550px] space-y-5 px-5"
@@ -66,7 +61,8 @@ export default function Login() {
             />
           </div>
           <div className="flex flex-col gap-3">
-            <SubmitButton pending={pending} />
+            <FormSubmissionButton />
+            <FormErrorHandler />
             <Link
               href={`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${process.env.NEXT_PUBLIC_SERVERURL}/google/callback&response_type=code&client_id=1028629889843-gjkff6ielpualsk4cu1700vbp08ggacj.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&access_type=offline`}
             >

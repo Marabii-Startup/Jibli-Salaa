@@ -48,6 +48,7 @@ export default function FormWrapper<T>({
   // Redirect user to another directory upon successful server action
   useEffect(() => {
     if (!pending && actionReturn?.status === "success" && redirectTo) {
+      console.log("rerouting the user...");
       router.replace(redirectTo);
     }
   }, [pending, actionReturn, redirectTo, router]);
@@ -143,13 +144,10 @@ function mergeActionReturns<T>(
   }
 
   // If localActionReturn has errors undefined, it means errors have been reset
-  const errors =
-    localActionReturn.errors === undefined
-      ? undefined
-      : {
-          ...actionReturn.errors,
-          ...localActionReturn.errors,
-        };
+  const errors = {
+    ...(actionReturn.errors || {}),
+    ...(localActionReturn.errors || {}),
+  };
 
   const status =
     actionReturn.status === "failure" || localActionReturn.status === "failure"

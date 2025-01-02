@@ -1,16 +1,40 @@
 import { Errors } from "@/interfaces/Errors/errors";
-import { LoginFormInputs } from "./handleLoginAction";
-import apiServer from "@/utils/apiServer";
+import { LoginFormInputs, LoginResponse } from "./handleLoginAction";
+import { ApiResponse, ApiStatus } from "@/interfaces/Apis/ApiResponse";
 
-export const handleLoginSubmit = async (data: LoginFormInputs) => {
-  await apiServer(`${process.env.NEXT_PUBLIC_SERVERURL}/api/v1/auth/login`, {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  });
+export const handleLoginSubmit = async (
+  data: LoginFormInputs
+): Promise<LoginResponse> => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SERVERURL}/api/v1/auth/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",
+      }
+    );
+
+    const responseData: ApiResponse<LoginResponse> = await response.json();
+
+    if (!response.ok) {
+      // Check if the server sent an error message in the expected format
+      const errorMessage = responseData?.message || "An unknown error occurred";
+      throw new Error(`Login failed: ${errorMessage}`);
+    }
+
+    if (responseData.status !== ApiStatus.SUCCESS) {
+      throw new Error(`Login unsuccessful: ${responseData.message}`);
+    }
+
+    // Return the data if login is successful
+    return responseData.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const getLoginForm = (formData: FormData): LoginFormInputs => {

@@ -8,10 +8,15 @@ import {
   ValidateFormResponse,
 } from "./helperFunctions";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 export interface LoginFormInputs {
   email?: string;
   password?: string;
+}
+
+export interface LoginResponse {
+  token: string;
 }
 
 export async function handleLoginAction(
@@ -30,19 +35,41 @@ export async function handleLoginAction(
   }
 
   try {
-    await handleLoginSubmit(loginForm);
+    const loginResponse = await handleLoginSubmit(loginForm);
+    const IS_PRODUCTION = process.env.IS_PRODUCTION === "true";
+
+    // Parse and validate COOKIES_MAX_AGE
+    let cookiesMaxAge = parseInt(process.env.COOKIES_MAX_AGE || "3600", 10);
+    if (isNaN(cookiesMaxAge)) {
+      console.warn("Invalid COOKIES_MAX_AGE. Defaulting to 3600 seconds.");
+      cookiesMaxAge = 3600;
+    }
+
+    // Determine sameSite based on environment
+    const sameSiteValue = IS_PRODUCTION ? "none" : "lax";
+
+    // Set the cookie
+    (await cookies()).set({
+      name: "jwtToken",
+      value: loginResponse.token,
+      httpOnly: true,
+      secure: IS_PRODUCTION,
+      sameSite: sameSiteValue,
+      path: "/",
+      maxAge: cookiesMaxAge,
+    });
+
+    // Revalidate the path to reflect the updated state
     revalidatePath("/");
     return { status: "success", data: loginForm };
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Error:", error);
       return {
         status: "failure",
         errors: { global: error.message },
         data: loginForm,
       };
     } else {
-      console.error("An unknown error occurred.");
       return {
         status: "failure",
         errors: { global: "An unknown error occurred." },
