@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function ErrorPage() {
   return (
     <div class="min-h-screen bg-red-50 flex items-center justify-center p-4">

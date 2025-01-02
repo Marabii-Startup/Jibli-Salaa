@@ -52,11 +52,12 @@ const Register = () => {
       );
       if (response.ok) {
         router.replace("/");
+        router.refresh();
       } else {
         throw new Error(response.statusText);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -71,7 +72,7 @@ const Register = () => {
   }));
   return (
     <div className="pb-36">
-      <div className="flex w-full flex-col items-center bg-white pt-20 text-center">
+      <div className="flex w-full flex-col items-center pt-20 text-center">
         <h1 className="font-playfair text-6xl font-bold">Create an account</h1>
         <p className="py-5 text-lg text-gray-400">
           Create an account and start using Jibli Salaa

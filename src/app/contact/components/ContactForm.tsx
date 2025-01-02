@@ -15,6 +15,7 @@ import { BuyerOrderState } from "@/interfaces/Order/order";
 import NegotiationForm from "./NegotiationForm";
 import { ORDER_STATUS } from "@/interfaces/Order/ORDER_STATUS";
 import Link from "next/link";
+import { OrderDetails } from "./OrderDetails";
 
 export default function NegotiatePage({
   orderId,
@@ -149,136 +150,139 @@ export default function NegotiatePage({
   };
 
   return (
-    <div className="flex h-[60%] flex-col p-4">
-      <h2 className="text-xl font-bold mb-4">
-        You are talking to: {recipientInfo?.name}
-      </h2>
-      <div className="flex-1 overflow-y-auto mb-4">
-        {/* Chat messages */}
-        {messages.map((msg, index) => {
-          const isSender = msg.senderId === userInfo?._id;
-          return (
-            <div
-              key={msg.id || index}
-              className={`flex mb-2 ${
-                isSender ? "justify-end" : "justify-start"
-              }`}
-            >
+    <>
+      <div className="flex h-[60%] flex-col p-4">
+        <h2 className="text-xl font-bold mb-4">
+          You are talking to: {recipientInfo?.name}
+        </h2>
+        <div className="flex-1 overflow-y-auto mb-4">
+          {/* Chat messages */}
+          {messages.map((msg, index) => {
+            const isSender = msg.senderId === userInfo?._id;
+            return (
               <div
-                className={`relative max-w-xs px-4 py-2 rounded-lg ${
-                  isSender
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
+                key={msg.id || index}
+                className={`flex mb-2 ${
+                  isSender ? "justify-end" : "justify-start"
                 }`}
               >
-                {msg.content}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.message}
-          onChange={(e) => setFormData({ message: e.target.value })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              sendMessage(formData.message);
-            }
-          }}
-        />
-        <button
-          onClick={() => sendMessage(formData.message)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg focus:outline-none"
-        >
-          Send
-        </button>
-      </div>
-      <div className="p-4">
-        {(userInfo?.role === ROLE.TRAVELER ||
-          (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
-            recipientInfo?._id === orderInfo?.buyerId)) && (
-          <div className="bg-gray-100 p-4 shadow rounded">
-            <p className="text-lg">
-              The order is{" "}
-              {orderInfo?.orderAccepted ? "accepted" : "not yet accepted"}
-            </p>
-            {orderInfo?.orderStatus ===
-              ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] && (
-              <div className="mt-2">
-                <h2 className="text-xl font-bold text-green-600">
-                  The order is finalized, please proceed to enter your banking
-                  information in order to receive your money once you make the
-                  delivery
-                </h2>
-              </div>
-            )}
-            {!orderInfo?.orderAccepted && (
-              <div className="mt-2 bg-red-100 p-3 rounded">
-                <h2 className="text-xl font-bold">
-                  You must accept the order before you can proceed for the
-                  delivery
-                </h2>
-                <button
-                  className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-                  onClick={() => handleAcceptOrder(orderId)}
+                <div
+                  className={`relative max-w-xs px-4 py-2 rounded-lg ${
+                    isSender
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
                 >
-                  Accept Order
-                </button>
+                  {msg.content}
+                </div>
               </div>
-            )}
-          </div>
-        )}
-
-        {(userInfo?.role === ROLE.BUYER ||
-          (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
-            userInfo?._id === orderInfo?.buyerId)) && (
-          <div className="bg-gray-100 p-4 shadow rounded">
-            <h2 className="text-xl text-center font-bold">
-              Please discuss details about the product with the other party
-            </h2>
-            {orderInfo?.orderAccepted ? (
-              orderInfo?.orderStatus ===
-              ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] ? (
+            );
+          })}
+        </div>
+        <div className="flex">
+          <input
+            type="text"
+            placeholder="Type a message..."
+            className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formData.message}
+            onChange={(e) => setFormData({ message: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage(formData.message);
+              }
+            }}
+          />
+          <button
+            onClick={() => sendMessage(formData.message)}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg focus:outline-none"
+          >
+            Send
+          </button>
+        </div>
+        <div className="p-4">
+          {(userInfo?.role === ROLE.TRAVELER ||
+            (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
+              recipientInfo?._id === orderInfo?.buyerId)) && (
+            <div className="bg-gray-100 p-4 shadow rounded">
+              <p className="text-lg">
+                The order is{" "}
+                {orderInfo?.orderAccepted ? "accepted" : "not yet accepted"}
+              </p>
+              {orderInfo?.orderStatus ===
+                ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] && (
                 <div className="mt-2">
                   <h2 className="text-xl font-bold text-green-600">
-                    The order is finalized, please proceed to the payment
+                    The order is finalized, please proceed to enter your banking
+                    information in order to receive your money once you make the
+                    delivery
                   </h2>
-                  <Link
-                    href={`/buyer/buyer-pay/${orderId}`}
-                    className="text-blue-500 hover:text-blue-700 transition-colors"
-                  >
-                    Pay for the item
-                  </Link>
                 </div>
-              ) : (
-                orderInfo?.orderStatus ===
-                  ORDER_STATUS[ORDER_STATUS.ORDER_ACCEPTED] && (
-                  <div className="mt-2">
-                    <h2 className="text-xl font-bold">
-                      You must finalize the order before proceeding with the
-                      purchase
-                    </h2>
-                    <p>
-                      Agree with the traveler on the product's cost and the
-                      delivery fee before attempting to finalize the order
-                    </p>
-                    <NegotiationForm orderId={orderId} />
-                  </div>
-                )
-              )
-            ) : (
-              <h2 className="text-red-600 text-xl font-bold">
-                The traveler must first accept the order
+              )}
+              {!orderInfo?.orderAccepted && (
+                <div className="mt-2 bg-red-100 p-3 rounded">
+                  <h2 className="text-xl font-bold">
+                    You must accept the order before you can proceed for the
+                    delivery
+                  </h2>
+                  <button
+                    className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+                    onClick={() => handleAcceptOrder(orderId)}
+                  >
+                    Accept Order
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(userInfo?.role === ROLE.BUYER ||
+            (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
+              userInfo?._id === orderInfo?.buyerId)) && (
+            <div className="bg-gray-100 p-4 shadow rounded">
+              <h2 className="text-xl text-center font-bold">
+                Please discuss details about the product with the other party
               </h2>
-            )}
-          </div>
-        )}
+              {orderInfo?.orderAccepted ? (
+                orderInfo?.orderStatus ===
+                ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] ? (
+                  <div className="mt-2">
+                    <h2 className="text-xl font-bold text-green-600">
+                      The order is finalized, please proceed to the payment
+                    </h2>
+                    <Link
+                      href={`/buyer/buyer-pay/${orderId}`}
+                      className="text-blue-500 hover:text-blue-700 transition-colors"
+                    >
+                      Pay for the item
+                    </Link>
+                  </div>
+                ) : (
+                  orderInfo?.orderStatus ===
+                    ORDER_STATUS[ORDER_STATUS.ORDER_ACCEPTED] && (
+                    <div className="mt-2">
+                      <h2 className="text-xl font-bold">
+                        You must finalize the order before proceeding with the
+                        purchase
+                      </h2>
+                      <p>
+                        Agree with the traveler on the product's cost and the
+                        delivery fee before attempting to finalize the order
+                      </p>
+                      <NegotiationForm orderId={orderId} />
+                    </div>
+                  )
+                )
+              ) : (
+                <h2 className="text-red-600 text-xl font-bold">
+                  The traveler must first accept the order
+                </h2>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      {orderInfo && <OrderDetails orderInfo={orderInfo} />}
+    </>
   );
 }
 

@@ -1,10 +1,9 @@
 import apiServer from "@/utils/apiServer";
 import { Suspense } from "react";
-import MapForBuyers from "./components/mapForTravelers";
-import type { BuyerOrderState } from "@/interfaces/Order/order";
 import { AddressObject } from "@/interfaces/Map/AddressObject";
-import { Itinerary } from "@/interfaces/Map/Itinerary";
 import MapForTravelers from "./components/mapForTravelers";
+import Tetromino from "@/components/Loading/Tetromino/Tetromino";
+import { CompletedOrder } from "@/interfaces/Order/order";
 
 interface SearchParams {
   countryStart: string;
@@ -22,7 +21,7 @@ export default async function AcceptOrdersPage({
 }) {
   const { countryStart, latStart, lngStart, countryEnd, latEnd, lngEnd } =
     await searchParams;
-  const result: BuyerOrderState["value"][] = await apiServer(
+  const result: CompletedOrder[] = await apiServer(
     `/api/protected/getOrders?countries_params=${countryStart} ${countryEnd}`
   );
   const route: {
@@ -43,7 +42,7 @@ export default async function AcceptOrdersPage({
     <Suspense
       fallback={
         <div className="bg-black w-[500px] h-[500px] text-white text-3xl">
-          Loading...
+          <Tetromino />
         </div>
       }
     >

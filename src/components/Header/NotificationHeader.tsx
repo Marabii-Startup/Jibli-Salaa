@@ -35,7 +35,12 @@ export default function Notifications() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await apiClient("/api/protected/notifications");
+      const response = await apiClient(
+        "/api/protected/notifications",
+        {},
+        false,
+        []
+      );
       // Use a Map to filter duplicates based on notification content
       const notificationMap = new Map();
 
@@ -62,9 +67,13 @@ export default function Notifications() {
   // Handle marking all notifications as read
   const handleMarkAllAsRead = async () => {
     try {
-      await apiClient(`/api/protected/notifications/markAllAsRead`, {
-        method: "DELETE",
-      });
+      await apiClient(
+        `/api/protected/notifications/markAllAsRead`,
+        {
+          method: "DELETE",
+        },
+        false
+      );
       setNotifications((prevNotifications) =>
         prevNotifications.map((notification) => ({
           ...notification,

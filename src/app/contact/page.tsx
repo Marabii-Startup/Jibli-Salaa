@@ -48,8 +48,8 @@ export default function Contact() {
   }
 
   return (
-    <div className="flex max-w-6xl mx-auto p-4">
-      <div className="w-1/4 bg-gray-100 space-y-4 overflow-y-auto h-screen">
+    <div className="flex max-w-6xl mx-auto p-4 h-full">
+      <div className="w-1/4 bg-gray-100 space-y-4 overflow-y-auto min-h-screen">
         {userInfo.contacts.map((contact) => (
           <div
             key={contact.contactId}

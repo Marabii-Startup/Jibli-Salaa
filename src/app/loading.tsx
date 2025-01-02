@@ -1,3 +1,5 @@
+import Tetromino from "@/components/Loading/Tetromino/Tetromino";
+
 export default function Loading() {
-  return <div>loading home page</div>;
+  return <Tetromino />;
 }

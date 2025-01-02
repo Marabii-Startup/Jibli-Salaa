@@ -10,10 +10,10 @@ import {
   InfoWindow,
 } from "@vis.gl/react-google-maps";
 import { AddressObject } from "@/interfaces/Map/AddressObject";
-import { BuyerOrderState } from "@/interfaces/Order/order";
 import { UserInfo } from "@/interfaces/userInfo/userInfo";
 import Link from "next/link";
 import { PolyLine } from "./Polyline";
+import { CompletedOrder } from "@/interfaces/Order/order";
 
 type Route = {
   departureLocation: Omit<AddressObject, "formatted_address">;
@@ -25,7 +25,7 @@ export default function MapForTravelers({
   orders,
 }: {
   route: Route;
-  orders: BuyerOrderState["value"][];
+  orders: CompletedOrder[];
 }) {
   const defaultCenter = {
     lat: route.departureLocation.lat || 0,
@@ -46,7 +46,7 @@ export default function MapForTravelers({
   ];
 
   return (
-    <div className="">
+    <div className="mb-5">
       <APIProvider apiKey={process.env.NEXT_PUBLIC_GoogleMaps_API ?? ""}>
         <div className="h-screen mx-auto w-[80%]">
           {defaultCenter.lat && defaultCenter.lng && (
@@ -165,11 +165,28 @@ function Directions({
   );
 }
 
-function ShowBuyers({ orders }: { orders: BuyerOrderState["value"][] }) {
-  const [orderBuyerInfo, setOrderBuyerInfo] = useState<UserInfo | null>(null);
-  const handleMarkerClick = async () => {
-    const result: UserInfo = await apiClient("/api/protected/getUserInfo");
-    setOrderBuyerInfo(result);
+function ShowBuyers({ orders }: { orders: CompletedOrder[] }) {
+  // State to keep track of the active marker's info
+  const [activeMarker, setActiveMarker] = useState<{
+    buyerInfo: UserInfo;
+    orderId: string;
+  } | null>(null);
+
+  const handleMarkerClick = async (order: CompletedOrder) => {
+    if (!order._id) {
+      return;
+    }
+    try {
+      const result: UserInfo = await apiClient(
+        `/api/protected/getUserInfo/${order.buyerId}`
+      );
+      setActiveMarker({
+        buyerInfo: result,
+        orderId: order._id,
+      });
+    } catch (error) {
+      console.error("Error fetching buyer info:", error);
+    }
   };
 
   return (
@@ -184,50 +201,48 @@ function ShowBuyers({ orders }: { orders: BuyerOrderState["value"][] }) {
         const lat = order.preferredPickupPlace.lat as number;
         const lng = order.preferredPickupPlace.lng as number;
         return (
-          <div key={`${lat}-${lng}`}>
+          <div key={order._id}>
             <AdvancedMarker
-              key={`${lat}-${lng}`}
               position={new google.maps.LatLng(lat, lng)}
-              onClick={handleMarkerClick}
+              onClick={() => handleMarkerClick(order)}
             >
-              <div
-                key={`${lat}-${lng}`}
-                className="bg-blue-900 p-2 text-white font-bold"
-              >
+              <div className="bg-blue-900 p-2 text-white font-bold">
                 <p>Proposed Fee: {order.initialDeliveryFee}</p>
                 <p>Product Price: {order.estimatedValue}</p>
               </div>
             </AdvancedMarker>
-            {orderBuyerInfo && (
+
+            {/* Only show InfoWindow for the active marker */}
+            {activeMarker && activeMarker.orderId === order._id && (
               <InfoWindow
                 position={new google.maps.LatLng(lat, lng)}
-                onCloseClick={() => setOrderBuyerInfo(null)}
+                onCloseClick={() => setActiveMarker(null)}
               >
                 <div className="bg-white shadow-lg rounded-lg p-4">
                   <div className="flex flex-col items-center space-y-2">
                     <img
-                      src={orderBuyerInfo.profilePicture}
+                      src={activeMarker.buyerInfo.profilePicture}
                       alt="profile picture"
                       className="w-24 h-24 rounded-full border-2 border-gray-300"
                     />
                     <p className="text-lg font-semibold">
-                      {orderBuyerInfo.name}
+                      {activeMarker.buyerInfo.name}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {orderBuyerInfo.email}
+                      {activeMarker.buyerInfo.email}
                     </p>
                     <p className="text-md text-gray-800">
-                      Product Price: {order.estimatedValue}
+                      Product Price: {order.estimatedValue} €
                     </p>
                     <p className="text-md text-gray-800">
-                      Initial delivery fee: {order.initialDeliveryFee}
+                      Proposed delivery fee: {order.initialDeliveryFee} €
                     </p>
                     <p className="text-md text-gray-800">
                       Pickup Location:{" "}
                       {order.preferredPickupPlace.formatted_address}
                     </p>
                     <Link
-                      href={`/negotiate?recipientId=${order.buyerId}&&orderId=${order._id}`}
+                      href={`/negotiate?recipientId=${order.buyerId}&orderId=${order._id}`}
                       className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                     >
                       Contact

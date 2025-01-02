@@ -32,7 +32,7 @@ export default async function ManageOrders() {
                   Quantity: {order.quantity}
                 </p>
                 <p className="text-gray-800 font-medium">
-                  Value: ${order.actualValue.toFixed(2)}
+                  Value: ${order.estimatedValue.toFixed(2)}
                 </p>
                 <p className="text-gray-800 font-medium">
                   Order Status:{" "}

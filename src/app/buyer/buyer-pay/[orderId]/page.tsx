@@ -1,8 +1,9 @@
-import { BuyerOrderState } from "@/interfaces/Order/order";
 import apiServer from "@/utils/apiServer";
 import PayButton from "./PayButton";
 import { UserInfo } from "@/interfaces/userInfo/userInfo";
 import { ROLE } from "@/interfaces/userInfo/userRole";
+import { CompletedOrder } from "@/interfaces/Order/order";
+import Tetromino from "../../../../components/Loading/Tetromino/Tetromino";
 
 export default async function BuyerPay({
   params,
@@ -10,14 +11,18 @@ export default async function BuyerPay({
   params: Promise<{ orderId: string }>;
 }) {
   const { orderId } = await params;
-  const orderInfo: BuyerOrderState["value"] = await apiServer(
+  const orderInfo: CompletedOrder = await apiServer(
     `/api/getOrderById/${orderId}`
   );
 
   const userInfo: UserInfo = await apiServer("/api/protected/getUserInfo");
 
   if (!userInfo) {
-    return <div>Loading ....</div>;
+    return (
+      <div>
+        <Tetromino />
+      </div>
+    );
   }
 
   if (

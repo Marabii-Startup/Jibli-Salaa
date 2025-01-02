@@ -9,7 +9,8 @@ interface ApiErrorResponse {
 const apiClient = async (
   pathname: string,
   options: RequestOptions = {},
-  shouldThrowError: boolean = true
+  shouldThrowError: boolean = true,
+  defaultReturn: any = null // Default value for defaultReturn
 ): Promise<any> => {
   const defaultHeaders: Record<string, string> = {};
 
@@ -33,9 +34,13 @@ const apiClient = async (
       requestOptions
     );
 
-    if (!response.ok && shouldThrowError) {
+    if (!response.ok) {
       const error: ApiErrorResponse = await response.json();
-      throw new Error(error.message || "Something went wrong");
+      if (shouldThrowError) {
+        throw new Error(error.message || "Something went wrong");
+      } else {
+        return defaultReturn; // Return defaultReturn if shouldThrowError is false
+      }
     }
 
     return response.json();
@@ -43,7 +48,8 @@ const apiClient = async (
     if (shouldThrowError) {
       throw new Error("Network error: Unable to reach the server");
     }
-    return Promise.reject(error);
+    console.error(error);
+    return defaultReturn; // Return defaultReturn in case of a network error if shouldThrowError is false
   }
 };
 

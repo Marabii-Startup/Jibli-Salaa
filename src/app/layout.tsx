@@ -3,7 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header/Header";
 import { StoreProvider } from "@/store/StoreProvider";
 import { ReactNode } from "react";
-import Footer from "@/components/Footer/Footer";
+import Footer from "@/components/Footer";
 
 const poppins = Poppins({
   subsets: ["latin"],

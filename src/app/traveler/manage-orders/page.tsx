@@ -73,7 +73,7 @@ export default async function ManageOrders() {
                   Product delivered! Click below to receive your payment.
                 </h3>
                 <Link
-                  href={`/traveler/receive-payment/create-quote/${order._id}`}
+                  href={`/traveler/receive-payment/${order._id}`}
                   className="mt-2 inline-block bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-300"
                 >
                   Receive Payment

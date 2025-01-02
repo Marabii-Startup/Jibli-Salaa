@@ -1,19 +1,25 @@
-import { jwtDecode } from "jwt-decode";
-import { cookies } from "next/headers";
-import { BuyerOrderState } from "@/interfaces/Order/order";
 import apiServer from "@/utils/apiServer";
 import Link from "next/link";
-import { Traveler } from "@/interfaces/Traveler/Traveler";
 import NotificationsComponent from "./NotificationHeader";
+import { UserInfo } from "@/interfaces/userInfo/userInfo";
+import { ROLE } from "@/interfaces/userInfo/userRole";
+import { cookies } from "next/headers";
 
 export default async function Header() {
   const cookieStore = await cookies();
-  const jwtTokenUndecoded = cookieStore.get("jwtToken")?.value;
-  const userEmail = jwtTokenUndecoded && jwtDecode(jwtTokenUndecoded)?.sub;
-  const orders: BuyerOrderState["value"][] =
-    userEmail && (await apiServer("/api/protected/getOwnOrders"));
-  const trips: Traveler[] =
-    userEmail && (await apiServer("/api/protected/getOwnTrips"));
+
+  const userInfo: UserInfo = await apiServer(
+    "/api/protected/getUserInfo",
+    {},
+    false
+  );
+
+  const isUserAuthenticated: Record<string, boolean> = await apiServer(
+    "/api/protected/verifyUser",
+    {},
+    false,
+    { success: false }
+  );
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md p-5 md:px-10 flex justify-between items-center">
@@ -24,7 +30,7 @@ export default async function Header() {
       </Link>
       <nav>
         <ul className="flex space-x-4 md:space-x-8">
-          {trips && trips.length > 0 && orders && orders.length > 0 ? (
+          {userInfo?.role === ROLE.TRAVELER_AND_BUYER ? (
             <>
               <Link href="/traveler/select-trip">
                 <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
@@ -39,7 +45,7 @@ export default async function Header() {
             </>
           ) : (
             <>
-              {trips && trips.length > 0 && (
+              {userInfo?.role === ROLE.TRAVELER && (
                 <>
                   <Link href="/traveler/manage-orders">
                     <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
@@ -54,7 +60,7 @@ export default async function Header() {
                   </Link>
                 </>
               )}
-              {orders && orders.length > 0 && (
+              {userInfo?.role === ROLE.BUYER && (
                 <>
                   <Link href="/buyer/manage-orders">
                     <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
@@ -70,22 +76,21 @@ export default async function Header() {
               )}
             </>
           )}
-          {(!trips || trips.length === 0) &&
-            (!orders || orders.length === 0) && (
-              <>
-                <Link href="/traveler">
-                  <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
-                    Become a Traveler
-                  </li>
-                </Link>
-                <Link href="/buyer">
-                  <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
-                    Become a Buyer
-                  </li>
-                </Link>
-              </>
-            )}
-          {userEmail && (
+          {(!userInfo || userInfo?.role === ROLE.NEITHER) && (
+            <>
+              <Link href="/traveler">
+                <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
+                  Become a Traveler
+                </li>
+              </Link>
+              <Link href="/buyer">
+                <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
+                  Become a Buyer
+                </li>
+              </Link>
+            </>
+          )}
+          {userInfo && (
             <Link href="/contact">
               <li className="cursor-pointer text-sm md:text-base text-gray-700 hover:text-blue-500">
                 Contact
@@ -101,7 +106,7 @@ export default async function Header() {
         >
           Log In
         </Link>
-        <NotificationsComponent />
+        {isUserAuthenticated.success && <NotificationsComponent />}
       </div>
     </header>
   );

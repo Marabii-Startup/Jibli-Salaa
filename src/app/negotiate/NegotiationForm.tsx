@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, ChangeEvent } from "react";
 import apiClient from "@/utils/apiClient";
+import { useRouter } from "next/navigation";
 
 // Define a type for the component props
 type NegotiationFormProps = {
@@ -14,6 +15,7 @@ function NegotiationForm({ orderId }: NegotiationFormProps) {
     actualDeliveryFee: "",
     orderId: "",
   });
+  const router = useRouter();
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -40,6 +42,7 @@ function NegotiationForm({ orderId }: NegotiationFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      router.push(`/buyer/buyer-pay/${orderId}`);
     } catch (error) {
       console.error("Error finalizing negotiation:", error);
       alert("Error finalizing negotiation. Please try again.");

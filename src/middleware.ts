@@ -1,55 +1,87 @@
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { ROLE } from "./interfaces/userInfo/userRole";
+import apiServer from "./utils/apiServer";
+import { UserInfo } from "./interfaces/userInfo/userInfo";
 
 export async function middleware(request: NextRequest) {
   const jwtToken = request.cookies.get("jwtToken")?.value;
   if (!jwtToken) {
     console.log("No JWT token found in cookies");
-    // Preserve the query string along with the pathname
     const originalUrl = request.nextUrl.clone();
     const loginUrl = new URL("/login", request.nextUrl.origin);
-
     loginUrl.searchParams.set(
       "redirect",
       originalUrl.pathname + originalUrl.search
-    ); // Preserve both pathname and query string
+    );
     return Response.redirect(loginUrl, 302);
   }
 
   try {
-    const result = await fetch(
+    // Verify the user
+    const verifyResult = await fetch(
       `${process.env.NEXT_PUBLIC_SERVERURL}/api/protected/verifyUser`,
       {
         method: "GET",
-        credentials: "include",
         headers: {
           Cookie: `jwtToken=${jwtToken}`,
         },
       }
     );
 
-    const response = await result.json();
-    const success = response.success;
+    const verifyResponse = await verifyResult.json();
+    const success = verifyResponse.success;
 
     if (!success) {
       const originalUrl = request.nextUrl.clone();
       const loginUrl = new URL("/login", request.nextUrl.origin);
-
       loginUrl.searchParams.set(
         "redirect",
         originalUrl.pathname + originalUrl.search
-      ); // Preserve both pathname and query string
+      );
       return Response.redirect(loginUrl, 302);
     }
+
+    // Check if the requested path is either /traveler or /buyer
+    const pathname = request.nextUrl.pathname;
+    const isRoleFreeRoute = pathname === "/traveler" || pathname === "/buyer";
+
+    if (isRoleFreeRoute) {
+      // Allow access without a role check
+      return NextResponse.next();
+    }
+
+    // Fetch user info to get the role
+    const userInfo: UserInfo = await apiServer(`/api/protected/getUserInfo`);
+
+    // Determine the required role for other paths
+    let requiredRole: ROLE | null = null;
+
+    if (pathname.startsWith("/buyer")) {
+      requiredRole = ROLE.BUYER;
+    } else if (pathname.startsWith("/traveler")) {
+      requiredRole = ROLE.TRAVELER;
+    }
+
+    // Check if the user has the required role
+    if (
+      requiredRole &&
+      userInfo.role !== requiredRole &&
+      userInfo.role !== ROLE.TRAVELER_AND_BUYER
+    ) {
+      // Redirect to home page if the user lacks the required role
+      return Response.redirect(new URL("/", request.nextUrl.origin), 302);
+    }
+
+    // Proceed to the requested route
+    return NextResponse.next();
   } catch (error) {
     console.log("Error:", error);
-
     const originalUrl = request.nextUrl.clone();
     const loginUrl = new URL("/login", request.nextUrl.origin);
-
     loginUrl.searchParams.set(
       "redirect",
       originalUrl.pathname + originalUrl.search
-    ); // Preserve both pathname and query string
+    );
     return Response.redirect(loginUrl, 302);
   }
 }

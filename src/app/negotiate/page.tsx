@@ -16,6 +16,7 @@ import { BuyerOrderState } from "@/interfaces/Order/order";
 import NegotiationForm from "./NegotiationForm";
 import { ORDER_STATUS } from "@/interfaces/Order/ORDER_STATUS";
 import Link from "next/link";
+import { OrderDetails } from "./OrderDetails";
 
 export default function NegotiatePage(): JSX.Element {
   const [formData, setFormData] = useState<{ message: string }>({
@@ -148,124 +149,154 @@ export default function NegotiatePage(): JSX.Element {
     }
   };
 
+  // Move handleAcceptOrder inside the component
+  async function handleAcceptOrder(orderId: string) {
+    try {
+      await apiClient(`/api/protected/acceptOrder/${orderId}`, {
+        method: "PUT",
+      });
+      // Option 1: Re-fetch the order info
+      const response = await apiClient(`/api/getOrderById/${orderId}`);
+      if (response) {
+        setOrderInfo(response);
+      }
+    } catch (e) {
+      console.error("Cannot accept order, something went wrong.");
+    }
+  }
+
   return (
-    <div className="flex flex-col p-4">
-      <h2 className="text-xl font-bold mb-4">
-        You are talking to: {recipientInfo?.name}
-      </h2>
-      <div className="flex-1 overflow-y-auto mb-4">
-        {/* Chat messages */}
-        {messages.map((msg, index) => {
-          const isSender = msg.senderId === userInfo?._id;
-          return (
-            <div
-              key={msg.id || index}
-              className={`flex mb-2 ${
-                isSender ? "justify-end" : "justify-start"
-              }`}
-            >
+    <>
+      <div className="flex h-full flex-col p-4">
+        <h2 className="text-xl font-bold mb-4">
+          You are talking to: {recipientInfo?.name}
+        </h2>
+        <div className="flex-1 overflow-y-auto mb-4">
+          {/* Chat messages */}
+          {messages.map((msg, index) => {
+            const isSender = msg.senderId === userInfo?._id;
+            return (
               <div
-                className={`relative max-w-xs px-4 py-2 rounded-lg ${
-                  isSender
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
+                key={msg.id || index}
+                className={`flex mb-2 ${
+                  isSender ? "justify-end" : "justify-start"
                 }`}
               >
-                {msg.content}
+                <div
+                  className={`relative max-w-xs px-4 py-2 rounded-lg ${
+                    isSender
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                >
+                  {msg.content}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex">
-        <input
-          type="text"
-          placeholder="Type a message..."
-          className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.message}
-          onChange={(e) => setFormData({ message: e.target.value })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              sendMessage(formData.message);
-            }
-          }}
-        />
-        <button
-          onClick={() => sendMessage(formData.message)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg focus:outline-none"
-        >
-          Send
-        </button>
-      </div>
-      {(userInfo?.role === ROLE.TRAVELER ||
-        (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
-          recipientInfo?._id === orderInfo?.buyerId)) && (
-        <div>
-          the order is{" "}
-          {orderInfo?.orderAccepted ? "accepted" : "not yet accepted"}
-          {orderInfo?.orderStatus ===
-            ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] && (
-            <>
-              <h2>
-                The order is finalized, please proceed to enter your banking
-                information in order to receive your money once you make the
-                delivery
-              </h2>
-            </>
-          )}
-          {!orderInfo?.orderAccepted && (
-            <div>
-              <h2>
-                You must accept the order before you can proceed for the
-                delivery
-              </h2>
-              <button onClick={() => handleAcceptOrder(orderId)}>
-                Accept Order
-              </button>
-            </div>
-          )}
+            );
+          })}
         </div>
-      )}
-
-      {(userInfo?.role === ROLE.BUYER ||
-        (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
-          userInfo?._id === orderInfo?.buyerId)) && (
-        <div>
-          <h2>
-            You must finalize the order before proceeding with the purchase
-          </h2>
-          {orderInfo?.orderAccepted ? (
-            orderInfo?.orderStatus ===
-            ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] ? (
-              <div>
-                <h2>THe order is finalized, please proceed to the payment</h2>
-                <Link href={`/buyer/buyer-pay/${orderId}`}>
-                  Pay for the item
-                </Link>
+        <div className="flex my-10">
+          <input
+            type="text"
+            placeholder="Type a message..."
+            className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formData.message}
+            onChange={(e) => setFormData({ message: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage(formData.message);
+              }
+            }}
+          />
+          <button
+            onClick={() => sendMessage(formData.message)}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r-lg focus:outline-none"
+          >
+            Send
+          </button>
+        </div>
+        {(userInfo?.role === ROLE.TRAVELER ||
+          (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
+            recipientInfo?._id === orderInfo?.buyerId)) && (
+          <div className="bg-gray-100 p-4 shadow rounded">
+            <p className="text-lg text-center">
+              You have{" "}
+              {orderInfo?.orderAccepted ? "accepted" : "not yet accepted"} the
+              order
+            </p>
+            {orderInfo?.orderStatus ===
+              ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] && (
+              <div className="mt-2">
+                <h2 className="text-xl font-bold text-green-600">
+                  The order is finalized, please proceed to enter your banking
+                  information in order to receive your money once you make the
+                  delivery
+                </h2>
               </div>
+            )}
+            {!orderInfo?.orderAccepted && (
+              <div className="mt-2 bg-red-100 p-3 rounded">
+                <h2 className="text-xl font-bold">
+                  You must accept the order before you can proceed for the
+                  delivery
+                </h2>
+                <button
+                  className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+                  onClick={() => handleAcceptOrder(orderId)}
+                >
+                  Accept Order
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(userInfo?.role === ROLE.BUYER ||
+          (userInfo?.role === ROLE.TRAVELER_AND_BUYER &&
+            userInfo?._id === orderInfo?.buyerId)) && (
+          <div className="bg-gray-100 p-4 shadow rounded">
+            <h2 className="text-xl text-center font-bold">
+              Please discuss details about the product with the other party
+            </h2>
+            {orderInfo?.orderAccepted ? (
+              orderInfo?.orderStatus ===
+              ORDER_STATUS[ORDER_STATUS.ORDER_FINALIZED] ? (
+                <div className="mt-2">
+                  <h2 className="text-xl font-bold text-green-600">
+                    The order is finalized, please proceed to the payment
+                  </h2>
+                  <Link
+                    href={`/buyer/buyer-pay/${orderId}`}
+                    className="text-blue-500 hover:text-blue-700 transition-colors"
+                  >
+                    Pay for the item
+                  </Link>
+                </div>
+              ) : (
+                orderInfo?.orderStatus ===
+                  ORDER_STATUS[ORDER_STATUS.ORDER_ACCEPTED] && (
+                  <div className="mt-2">
+                    <h2 className="text-xl font-bold">
+                      You must finalize the order before proceeding with the
+                      purchase
+                    </h2>
+                    <p>
+                      Agree with the traveler on the product's cost and the
+                      delivery fee before attempting to finalize the order
+                    </p>
+                    <NegotiationForm orderId={orderId} />
+                  </div>
+                )
+              )
             ) : (
-              <div>
-                <h2>Finalizing the order:</h2>
-                <p>
-                  Aggree with the traveler on the product's cost and the
-                  delivery fee before attempting to finalize the order
-                </p>
-                <NegotiationForm orderId={orderId} />
-              </div>
-            )
-          ) : (
-            <h2>The traveler must first accept the order</h2>
-          )}
-        </div>
-      )}
-    </div>
+              <h2 className="text-red-600 text-xl font-bold">
+                The traveler must first accept the order
+              </h2>
+            )}
+          </div>
+        )}
+      </div>
+      {orderInfo && <OrderDetails orderInfo={orderInfo} />}
+    </>
   );
-}
-
-async function handleAcceptOrder(orderId: string) {
-  try {
-    await apiClient(`/api/protected/acceptOrder/${orderId}`, { method: "PUT" });
-  } catch (e) {
-    throw new Error("Cannot accept order, something went wrong.");
-  }
 }
